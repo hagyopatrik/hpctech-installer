@@ -91,7 +91,7 @@ foreach ($cat in $apps.Keys) {
 function Show-Menu {
     Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "               EVERYDAY APPS INSTALLER  (winget)"                  -ForegroundColor Cyan
+    Write-Host "               HPC Tech App INSTALLER  (winget)"                  -ForegroundColor Cyan
     Write-Host "================================================================" -ForegroundColor Cyan
     $lastCat = ""
     foreach ($item in $flat) {
