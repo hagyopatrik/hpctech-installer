@@ -69,6 +69,7 @@ $apps = [ordered]@{
         @{ Name = "AIDA64 Extreme";         Id = "FinalWire.AIDA64.Extreme" }
         @{ Name = "HWiNFO";                 Id = "REALiX.HWiNFO" }
         @{ Name = "CrystalDiskMark";        Id = "CrystalDewWorld.CrystalDiskMark" }
+        @{ Name = "Driver Booster";         Id = "IObit.DriverBooster" }
     )
 }
 
