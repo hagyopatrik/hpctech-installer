@@ -72,6 +72,7 @@ Type your selection and press **Enter**. Everything is mixable:
 | **M** | Media |
 | **C** | Comms |
 | **U** | Utilities |
+| **P** | Default HPC Tech Package |
 
 ---
 
