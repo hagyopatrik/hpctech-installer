@@ -161,7 +161,7 @@ do {
             $flat | Where-Object { $_.Id -eq $id }
         }
     }
-    } else {
+    else {
         $tokens = $choice -split '[,\s]+' | Where-Object { $_ -match '^\d+$' }
         $selection = foreach ($t in $tokens) {
             $found = $flat | Where-Object { $_.Num -eq [int]$t }
