@@ -5,7 +5,7 @@
   - Categorized menu, multi-select, installs in chosen order
   - Designed to run from anywhere with a single command:
 
-      irm https://<your-raw-url>/Install-Apps.ps1 | iex
+      irm https://installer.hpctech.hu | iex
 
   Run PowerShell as Administrator for silent installs.
 =================================================================
@@ -73,7 +73,7 @@ $apps = [ordered]@{
     )
 }
 
-# ---- Default App Pack (In order) ----
+# ---- Default App Pack (in order) ----
 $defaultPack = @(
     "Google.Chrome"
     "Mozilla.Firefox"
@@ -146,17 +146,19 @@ function Install-App($item) {
 }
 
 # ---------------- Main loop ----------------
+$again = "Y"
 do {
     Show-Menu
     $choice = Read-Host "Your selection"
     if ([string]::IsNullOrWhiteSpace($choice)) { continue }
 
-    if ($choice.Trim().ToUpper() -eq "Q") { break }
+    $c = $choice.Trim().ToUpper()
+    if ($c -eq "Q") { break }
 
-    if ($choice.Trim().ToUpper() -eq "A") {
+    if ($c -eq "A") {
         $selection = $flat
-        }
-            elseif ($choice.Trim().ToUpper() -eq "P") {
+    }
+    elseif ($c -eq "P") {
         $selection = foreach ($id in $defaultPack) {
             $flat | Where-Object { $_.Id -eq $id }
         }
