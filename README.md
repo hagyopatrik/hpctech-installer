@@ -24,19 +24,13 @@ Pick apps from a categorized menu, select many at once, and they install **in th
 Run it with a single line — **no download needed**:
 
 ```powershell
-irm https://raw.githubusercontent.com/USER/REPO/main/install-apps.ps1 | iex
-```
-
-Or with a URL shortener for something you can actually type:
-
-```powershell
-irm bit.ly/xyz | iex
+irm https://installer.hpctech.hu | iex
 ```
 
 If script execution is blocked on the machine:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -Command "irm bit.ly/xyz | iex"
+powershell -ExecutionPolicy Bypass -Command "irm https://installer.hpctech.hu | iex"
 ```
 
 > 💡 For system-wide apps, start PowerShell as **Administrator** first — a one-liner can't self-elevate because nothing is written to disk.
@@ -45,7 +39,7 @@ powershell -ExecutionPolicy Bypass -Command "irm bit.ly/xyz | iex"
 Download and run (needs a temp file — `.bat` can't be piped):
 
 ```cmd
-curl -L bit.ly/xyz -o a.bat && a.bat
+curl -L https://installer.hpctech.hu -o a.bat && a.bat
 ```
 
 Then **right-click ▸ Run as administrator**.
