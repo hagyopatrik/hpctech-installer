@@ -1,4 +1,4 @@
-# 🚀 Everyday Apps Installer
+# 🚀 HPC Tech App Installer
 
 A tiny, menu-driven **winget** installer for setting up a fresh Windows machine in minutes.
 Pick apps from a categorized menu, select many at once, and they install **in the exact order you choose** — silently, no clicking through prompts.
