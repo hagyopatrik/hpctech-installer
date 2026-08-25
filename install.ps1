@@ -1,6 +1,6 @@
 <#
 =================================================================
-  Bootstrap launcher for the Everyday Apps Installer
+  Bootstrap launcher for the HPC Tech App Installer
   -----------------------------------------------------------------
   This tiny script simply downloads and runs the main installer
   (Install-Apps.ps1) from the GitHub repository.
