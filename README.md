@@ -56,6 +56,8 @@ Type your selection and press **Enter**. Everything is mixable:
 | `1,4,7` | commas work too |
 | `20-24` | a range of items |
 | `E` | preset: all **Essentials** |
+| `P` | **Default Package** (Recommended HPC Tech package) |
+| `P 20-24` | mix the package with ranges & numbers — installed **in that order** |
 | `E B 20-24 30` | mix presets, ranges & numbers — installed **in that order** |
 | `A` | install **everything** |
 | `Q` | quit |
@@ -77,12 +79,14 @@ Type your selection and press **Enter**. Everything is mixable:
 
 | Category | Apps |
 |----------|------|
-| **Browsers** | Google Chrome, Mozilla Firefox, Brave |
-| **Essentials** | 7-Zip, Notepad++, VLC, Adobe Acrobat Reader, PowerToys, Everything |
-| **Media** | Spotify, K-Lite Codec Pack, GIMP, ShareX, OBS Studio |
-| **Comms** | Microsoft Teams, Zoom, Discord, Slack, Telegram |
-| **Dev** | VS Code, Git, Python 3, Node.js LTS, Windows Terminal, PowerShell 7, PuTTY, WinSCP |
-| **Utilities** | Google Drive, Dropbox, TeamViewer, AnyDesk, Malwarebytes, Steam |
+| **Browsers** | Google Chrome, Mozilla Firefox, Brave Browser |
+| **Compression** | 7-Zip, WinRAR |
+| **Media** | VLC Media Player, Spotify |
+| **Development** | Visual Studio Code, Python 3, Notepad++ |
+| **Gaming & Torrent** | Steam, qBittorrent |
+| **Communication & Remote** | Microsoft Teams, TeamViewer, AnyDesk |
+| **Office & Documents** | Microsoft 365 (Office), Adobe Acrobat Reader |
+| **System & Diagnostics** | AIDA64 Extreme, HWiNFO, CrystalDiskMark, Driver Booster |
 
 ---
 
