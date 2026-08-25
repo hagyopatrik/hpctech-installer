@@ -73,6 +73,20 @@ $apps = [ordered]@{
     )
 }
 
+# ---- Default App Pack (In order) ----
+$defaultPack = @(
+    "Google.Chrome"
+    "Mozilla.Firefox"
+    "Brave.Brave"
+    "RARLab.WinRAR"
+    "VideoLAN.VLC"
+    "TeamViewer.TeamViewer"
+    "AnyDeskSoftwareGmbH.AnyDesk"
+    "Microsoft.Office"
+    "Adobe.Acrobat.Reader.64-bit"
+    "IObit.DriverBooster"
+)
+
 # ---------------- Flatten into a numbered list ----------------
 $flat = New-Object System.Collections.ArrayList
 $index = 0
@@ -105,7 +119,8 @@ function Show-Menu {
     }
     Write-Host "----------------------------------------------------------------"
     Write-Host "     A)  Install ALL of the above" -ForegroundColor Green
-    Write-Host "     Q)  Quit"                     -ForegroundColor Green
+    Write-Host "     P)  Default App Pack"         -ForegroundColor Green
+    Write-Host "     Q)  Quit"                     -ForegroundColor Red
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Type numbers separated by spaces or commas (order = install order)."
@@ -140,6 +155,12 @@ do {
 
     if ($choice.Trim().ToUpper() -eq "A") {
         $selection = $flat
+        }
+            elseif ($choice.Trim().ToUpper() -eq "P") {
+        $selection = foreach ($id in $defaultPack) {
+            $flat | Where-Object { $_.Id -eq $id }
+        }
+    }
     } else {
         $tokens = $choice -split '[,\s]+' | Where-Object { $_ -match '^\d+$' }
         $selection = foreach ($t in $tokens) {
