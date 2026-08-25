@@ -13,7 +13,7 @@
 =================================================================
 #>
 
-$mainScript = "https://raw.githubusercontent.com/USER/REPO/main/Install-Apps.ps1"
+$mainScript = "https://raw.githubusercontent.com/hagyopatrik/hpctech-installer/refs/heads/main/Install-Apps.ps1"
 
 Write-Host "Fetching the latest installer..." -ForegroundColor Cyan
 
