@@ -20,7 +20,7 @@ if (-not $curr.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
         Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$self`"" -Verb RunAs
     } else {
         # Running via irm | iex (no file on disk) -> re-fetch and run elevated
-        Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -Command `"irm https://raw.githubusercontent.com/USER/REPO/main/Install-Apps.ps1 | iex`"" -Verb RunAs
+        Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -Command `"irm https://raw.githubusercontent.com/hagyopatrik/hpctech-installer/refs/heads/main/Install-Apps.ps1 | iex`"" -Verb RunAs
     }
     return
 }
