@@ -1,10 +1,11 @@
 #Requires -Version 5.1
 <#
 =================================================================
-  Everyday Apps Installer (PowerShell / winget + Chocolatey)
+  HPC Tech App Installer (PowerShell / winget + Chocolatey)
   - Categorized menu, multi-select, installs in chosen order
-  - winget for most apps, Chocolatey for the rest (e.g. HP Support Assistant)
-  - Designed to run from anywhere with a single command:
+  - Per-app source: winget OR choco (auto-installs choco if needed)
+  - Default App Pack (P), Install all (A), Uninstall all (X)
+  - Run from anywhere:
 
       irm https://installer.hpctech.hu | iex
 
@@ -33,79 +34,72 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     return
 }
 
-# ---------------- Chocolatey helpers ----------------
-function Test-Choco {
-    return [bool](Get-Command choco -ErrorAction SilentlyContinue)
-}
-
-function Install-Choco {
-    if (Test-Choco) {
-        Write-Host " [i] Chocolatey is already installed." -ForegroundColor Green
-        return $true
-    }
+# ---------------- Ensure Chocolatey (only when a choco app is selected) ----------------
+function Ensure-Choco {
+    if (Get-Command choco -ErrorAction SilentlyContinue) { return $true }
     Write-Host ""
-    Write-Host "----------------------------------------------------------------"
-    Write-Host " Installing Chocolatey..." -ForegroundColor White
-    Write-Host "----------------------------------------------------------------"
+    Write-Host " Chocolatey not found - installing it now..." -ForegroundColor Yellow
     try {
         Set-ExecutionPolicy Bypass -Scope Process -Force
-        [System.Net.ServicePointManager]::SecurityProtocol = `
-            [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
         Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-        # Make choco available in the current session
-        $env:Path += ";$env:ProgramData\chocolatey\bin"
-        if (Test-Choco) {
-            Write-Host " [OK] Chocolatey installed." -ForegroundColor Green
-            return $true
-        }
+        # refresh PATH for current session
+        $env:Path = [System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')
     } catch {
         Write-Host " [!!] Chocolatey install failed: $($_.Exception.Message)" -ForegroundColor Red
     }
+    if (Get-Command choco -ErrorAction SilentlyContinue) {
+        Write-Host " [OK] Chocolatey ready." -ForegroundColor Green
+        return $true
+    }
+    Write-Host " [!!] Chocolatey is still not available." -ForegroundColor Red
     return $false
 }
 
 # ---------------- App catalog (ordered, categorized) ----------------
-# Each app: Name, Id, Source (winget | choco)
+# Each app: Name, Id, Source ('winget' default, or 'choco')
 $apps = [ordered]@{
     "Browsers" = @(
-        @{ Name = "Google Chrome";          Id = "Google.Chrome";                   Source = "winget" }
-        @{ Name = "Mozilla Firefox";        Id = "Mozilla.Firefox";                 Source = "winget" }
-        @{ Name = "Brave Browser";          Id = "Brave.Brave";                     Source = "winget" }
+        @{ Name = "Google Chrome";          Id = "Google.Chrome" }
+        @{ Name = "Mozilla Firefox";        Id = "Mozilla.Firefox" }
+        @{ Name = "Brave Browser";          Id = "Brave.Brave" }
     )
     "Compression" = @(
-        @{ Name = "7-Zip";                  Id = "7zip.7zip";                       Source = "winget" }
-        @{ Name = "WinRAR";                 Id = "RARLab.WinRAR";                   Source = "winget" }
+        @{ Name = "7-Zip";                  Id = "7zip.7zip" }
+        @{ Name = "WinRAR";                 Id = "RARLab.WinRAR" }
     )
     "Media" = @(
-        @{ Name = "VLC Media Player";       Id = "VideoLAN.VLC";                    Source = "winget" }
-        @{ Name = "Spotify";                Id = "Spotify.Spotify";                 Source = "winget" }
+        @{ Name = "VLC Media Player";       Id = "VideoLAN.VLC" }
+        @{ Name = "Spotify";                Id = "Spotify.Spotify" }
     )
     "Development" = @(
-        @{ Name = "Visual Studio Code";     Id = "Microsoft.VisualStudioCode";      Source = "winget" }
-        @{ Name = "Python 3";               Id = "Python.Python.3.12";              Source = "winget" }
-        @{ Name = "Notepad++";              Id = "Notepad++.Notepad++";             Source = "winget" }
+        @{ Name = "Visual Studio Code";     Id = "Microsoft.VisualStudioCode" }
+        @{ Name = "Python 3";               Id = "Python.Python.3.12" }
+        @{ Name = "Notepad++";              Id = "Notepad++.Notepad++" }
     )
     "Gaming & Torrent" = @(
-        @{ Name = "Steam";                  Id = "Valve.Steam";                     Source = "winget" }
-        @{ Name = "qBittorrent";            Id = "qBittorrent.qBittorrent";         Source = "winget" }
+        @{ Name = "Steam";                  Id = "Valve.Steam" }
+        @{ Name = "qBittorrent";            Id = "qBittorrent.qBittorrent" }
     )
     "Communication & Remote" = @(
-        @{ Name = "Microsoft Teams";        Id = "Microsoft.Teams";                 Source = "winget" }
-        @{ Name = "TeamViewer";             Id = "TeamViewer.TeamViewer";           Source = "winget" }
-        @{ Name = "AnyDesk";                Id = "AnyDeskSoftwareGmbH.AnyDesk";     Source = "winget" }
+        @{ Name = "Microsoft Teams";        Id = "Microsoft.Teams" }
+        @{ Name = "TeamViewer";             Id = "TeamViewer.TeamViewer" }
+        @{ Name = "AnyDesk";                Id = "AnyDeskSoftwareGmbH.AnyDesk" }
     )
     "Office & Documents" = @(
-        @{ Name = "Microsoft 365 (Office)"; Id = "Microsoft.Office";                Source = "winget" }
-        @{ Name = "Adobe Acrobat Reader";   Id = "Adobe.Acrobat.Reader.64-bit";     Source = "winget" }
+        @{ Name = "Microsoft 365 (Office)"; Id = "Microsoft.Office" }
+        @{ Name = "Adobe Acrobat Reader";   Id = "Adobe.Acrobat.Reader.64-bit" }
+    )
+    "OEM Support Tools" = @(
+        @{ Name = "HP Support Assistant";   Id = "hpsupportassistant"; Source = "choco" }
+        @{ Name = "Lenovo System Update";   Id = "Lenovo.SystemUpdate" }
+        @{ Name = "Dell Command Update";    Id = "Dell.CommandUpdate" }
     )
     "System & Diagnostics" = @(
-        @{ Name = "AIDA64 Extreme";         Id = "FinalWire.AIDA64.Extreme";        Source = "winget" }
-        @{ Name = "HWiNFO";                 Id = "REALiX.HWiNFO";                   Source = "winget" }
-        @{ Name = "CrystalDiskMark";        Id = "CrystalDewWorld.CrystalDiskMark"; Source = "winget" }
-        @{ Name = "Driver Booster";         Id = "IObit.DriverBooster";             Source = "winget" }
-    )
-    "Chocolatey Packages (requires Chocolatey)" = @(
-        @{ Name = "HP Support Assistant";   Id = "hpsupportassistant";              Source = "choco" }
+        @{ Name = "AIDA64 Extreme";         Id = "FinalWire.AIDA64.Extreme" }
+        @{ Name = "HWiNFO";                 Id = "REALiX.HWiNFO" }
+        @{ Name = "CrystalDiskMark";        Id = "CrystalDewWorld.CrystalDiskMark" }
+        @{ Name = "Driver Booster";         Id = "IObit.DriverBooster" }
     )
 }
 
@@ -129,11 +123,12 @@ $index = 0
 foreach ($cat in $apps.Keys) {
     foreach ($app in $apps[$cat]) {
         $index++
+        $src = if ($app.ContainsKey('Source')) { $app.Source } else { 'winget' }
         [void]$flat.Add([pscustomobject]@{
             Num      = $index
             Name     = $app.Name
             Id       = $app.Id
-            Source   = $app.Source
+            Source   = $src
             Category = $cat
         })
     }
@@ -152,18 +147,18 @@ function Show-Menu {
             Write-Host "  --- $($item.Category) ---" -ForegroundColor DarkGray
             $lastCat = $item.Category
         }
-        $tag = if ($item.Source -eq "choco") { "  [choco]" } else { "" }
-        "{0,4})  {1}{2}" -f $item.Num, $item.Name, $tag | Write-Host
+        $tag = if ($item.Source -eq 'choco') { "  [choco]" } else { "" }
+        ("{0,4})  {1}{2}" -f $item.Num, $item.Name, $tag) | Write-Host
     }
     Write-Host "----------------------------------------------------------------"
     Write-Host "     A)  Install ALL of the above" -ForegroundColor Green
     Write-Host "     P)  Default App Pack"         -ForegroundColor Green
-    Write-Host "     C)  Install Chocolatey"       -ForegroundColor Yellow
+    Write-Host "     X)  Uninstall all listed apps" -ForegroundColor Magenta
     Write-Host "     Q)  Quit"                     -ForegroundColor Red
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Type numbers separated by spaces or commas (order = install order)."
-    Write-Host "  Example:  1 4 8 15      ([choco] items auto-install Chocolatey if needed)"
+    Write-Host "  Example:  1 4 8 15"
     Write-Host ""
 }
 
@@ -174,28 +169,45 @@ function Install-App($item) {
     Write-Host " Installing: $($item.Name)  ($($item.Id)) [$($item.Source)]" -ForegroundColor White
     Write-Host "----------------------------------------------------------------"
 
-    if ($item.Source -eq "choco") {
-        if (-not (Test-Choco)) {
-            Write-Host " [i] This package needs Chocolatey. Installing it first..." -ForegroundColor Yellow
-            if (-not (Install-Choco)) {
-                Write-Host " [!!] $($item.Name) skipped (Chocolatey not available)." -ForegroundColor Red
-                return $false
-            }
-        }
+    if ($item.Source -eq 'choco') {
+        if (-not (Ensure-Choco)) { return $false }
         choco install $item.Id -y --no-progress
-        $code = $LASTEXITCODE
-    }
-    else {
+    } else {
         winget install --id $item.Id --exact --silent `
             --accept-package-agreements --accept-source-agreements
-        $code = $LASTEXITCODE
     }
 
-    if ($code -eq 0) {
+    if ($LASTEXITCODE -eq 0) {
         Write-Host " [OK] $($item.Name) done." -ForegroundColor Green
         return $true
     } else {
-        Write-Host " [!!] $($item.Name) failed (exit $code)." -ForegroundColor Red
+        Write-Host " [!!] $($item.Name) failed (exit $LASTEXITCODE)." -ForegroundColor Red
+        return $false
+    }
+}
+
+# ---------------- Uninstall one app ----------------
+function Uninstall-App($item) {
+    Write-Host ""
+    Write-Host "----------------------------------------------------------------"
+    Write-Host " Uninstalling: $($item.Name)  ($($item.Id)) [$($item.Source)]" -ForegroundColor White
+    Write-Host "----------------------------------------------------------------"
+
+    if ($item.Source -eq 'choco') {
+        if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+            Write-Host " [skip] Chocolatey not installed - nothing to remove." -ForegroundColor Yellow
+            return $false
+        }
+        choco uninstall $item.Id -y
+    } else {
+        winget uninstall --id $item.Id --exact --silent
+    }
+
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host " [OK] $($item.Name) removed." -ForegroundColor Green
+        return $true
+    } else {
+        Write-Host " [!!] $($item.Name) not removed (exit $LASTEXITCODE - maybe not installed)." -ForegroundColor Yellow
         return $false
     }
 }
@@ -210,14 +222,27 @@ do {
     $c = $choice.Trim().ToUpper()
     if ($c -eq "Q") { break }
 
-    # Standalone: install Chocolatey only
-    if ($c -eq "C") {
-        Install-Choco | Out-Null
+    # --- Uninstall all listed apps ---
+    if ($c -eq "X") {
         Write-Host ""
-        Read-Host "Press Enter to continue"
+        Write-Host " WARNING: This will uninstall EVERY app listed in this menu." -ForegroundColor Magenta
+        $confirm = Read-Host " Type YES to continue"
+        if ($confirm -ne "YES") { Write-Host " Cancelled." -ForegroundColor Yellow; Start-Sleep 2; continue }
+
+        $ok = 0; $fail = 0
+        foreach ($item in $flat) {
+            if (Uninstall-App $item) { $ok++ } else { $fail++ }
+        }
+        Write-Host ""
+        Write-Host "================================================================" -ForegroundColor Cyan
+        Write-Host " Finished.  Removed: $ok   Skipped/Failed: $fail"               -ForegroundColor Cyan
+        Write-Host "================================================================" -ForegroundColor Cyan
+        Write-Host ""
+        $again = Read-Host "Back to the menu? (Y/N)"
         continue
     }
 
+    # --- Build selection for install ---
     if ($c -eq "A") {
         $selection = $flat
     }
