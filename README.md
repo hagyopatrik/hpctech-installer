@@ -143,22 +143,6 @@ winget search "app name"
 choco search "app name"
 ```
 
----
-
-## 🌍 Short URL setup (Cloudflare)
-
-`installer.hpctech.hu` is a Cloudflare redirect to the raw GitHub file:
-
-1. **DNS → Add record**
-   - Type `AAAA`, Name `installer`, IPv6 `100::`, **Proxied** (orange cloud)
-2. **Rules → Redirect Rules → Create rule**
-   - When **Hostname equals** `installer.hpctech.hu`
-   - Then **Static** redirect to the raw `Install-Apps.ps1` URL, status **301**
-
-The proxy (orange cloud) is required for the redirect to work.
-
----
-
 ## ✅ Requirements
 
 - Windows 10 / 11
@@ -168,16 +152,7 @@ The proxy (orange cloud) is required for the redirect to work.
 
 ---
 
-## 📁 Repository structure
 
-```text
-hpctech-installer/
-├── Install-Apps.ps1     # main installer (menu, winget + choco, P / A / X)
-├── install.ps1          # optional bootstrap launcher
-└── README.md
-```
-
----
 
 ## 📄 License
 
