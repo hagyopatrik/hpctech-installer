@@ -1,8 +1,9 @@
 #Requires -Version 5.1
 <#
 =================================================================
-  Everyday Apps Installer (PowerShell / winget)
+  Everyday Apps Installer (PowerShell / winget + Chocolatey)
   - Categorized menu, multi-select, installs in chosen order
+  - winget for most apps, Chocolatey for the rest (e.g. HP Support Assistant)
   - Designed to run from anywhere with a single command:
 
       irm https://installer.hpctech.hu | iex
@@ -32,44 +33,79 @@ if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
     return
 }
 
+# ---------------- Chocolatey helpers ----------------
+function Test-Choco {
+    return [bool](Get-Command choco -ErrorAction SilentlyContinue)
+}
+
+function Install-Choco {
+    if (Test-Choco) {
+        Write-Host " [i] Chocolatey is already installed." -ForegroundColor Green
+        return $true
+    }
+    Write-Host ""
+    Write-Host "----------------------------------------------------------------"
+    Write-Host " Installing Chocolatey..." -ForegroundColor White
+    Write-Host "----------------------------------------------------------------"
+    try {
+        Set-ExecutionPolicy Bypass -Scope Process -Force
+        [System.Net.ServicePointManager]::SecurityProtocol = `
+            [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+        Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+        # Make choco available in the current session
+        $env:Path += ";$env:ProgramData\chocolatey\bin"
+        if (Test-Choco) {
+            Write-Host " [OK] Chocolatey installed." -ForegroundColor Green
+            return $true
+        }
+    } catch {
+        Write-Host " [!!] Chocolatey install failed: $($_.Exception.Message)" -ForegroundColor Red
+    }
+    return $false
+}
+
 # ---------------- App catalog (ordered, categorized) ----------------
+# Each app: Name, Id, Source (winget | choco)
 $apps = [ordered]@{
     "Browsers" = @(
-        @{ Name = "Google Chrome";          Id = "Google.Chrome" }
-        @{ Name = "Mozilla Firefox";        Id = "Mozilla.Firefox" }
-        @{ Name = "Brave Browser";          Id = "Brave.Brave" }
+        @{ Name = "Google Chrome";          Id = "Google.Chrome";                   Source = "winget" }
+        @{ Name = "Mozilla Firefox";        Id = "Mozilla.Firefox";                 Source = "winget" }
+        @{ Name = "Brave Browser";          Id = "Brave.Brave";                     Source = "winget" }
     )
     "Compression" = @(
-        @{ Name = "7-Zip";                  Id = "7zip.7zip" }
-        @{ Name = "WinRAR";                 Id = "RARLab.WinRAR" }
+        @{ Name = "7-Zip";                  Id = "7zip.7zip";                       Source = "winget" }
+        @{ Name = "WinRAR";                 Id = "RARLab.WinRAR";                   Source = "winget" }
     )
     "Media" = @(
-        @{ Name = "VLC Media Player";       Id = "VideoLAN.VLC" }
-        @{ Name = "Spotify";                Id = "Spotify.Spotify" }
+        @{ Name = "VLC Media Player";       Id = "VideoLAN.VLC";                    Source = "winget" }
+        @{ Name = "Spotify";                Id = "Spotify.Spotify";                 Source = "winget" }
     )
     "Development" = @(
-        @{ Name = "Visual Studio Code";     Id = "Microsoft.VisualStudioCode" }
-        @{ Name = "Python 3";               Id = "Python.Python.3.12" }
-        @{ Name = "Notepad++";              Id = "Notepad++.Notepad++" }
+        @{ Name = "Visual Studio Code";     Id = "Microsoft.VisualStudioCode";      Source = "winget" }
+        @{ Name = "Python 3";               Id = "Python.Python.3.12";              Source = "winget" }
+        @{ Name = "Notepad++";              Id = "Notepad++.Notepad++";             Source = "winget" }
     )
     "Gaming & Torrent" = @(
-        @{ Name = "Steam";                  Id = "Valve.Steam" }
-        @{ Name = "qBittorrent";            Id = "qBittorrent.qBittorrent" }
+        @{ Name = "Steam";                  Id = "Valve.Steam";                     Source = "winget" }
+        @{ Name = "qBittorrent";            Id = "qBittorrent.qBittorrent";         Source = "winget" }
     )
     "Communication & Remote" = @(
-        @{ Name = "Microsoft Teams";        Id = "Microsoft.Teams" }
-        @{ Name = "TeamViewer";             Id = "TeamViewer.TeamViewer" }
-        @{ Name = "AnyDesk";                Id = "AnyDeskSoftwareGmbH.AnyDesk" }
+        @{ Name = "Microsoft Teams";        Id = "Microsoft.Teams";                 Source = "winget" }
+        @{ Name = "TeamViewer";             Id = "TeamViewer.TeamViewer";           Source = "winget" }
+        @{ Name = "AnyDesk";                Id = "AnyDeskSoftwareGmbH.AnyDesk";     Source = "winget" }
     )
     "Office & Documents" = @(
-        @{ Name = "Microsoft 365 (Office)"; Id = "Microsoft.Office" }
-        @{ Name = "Adobe Acrobat Reader";   Id = "Adobe.Acrobat.Reader.64-bit" }
+        @{ Name = "Microsoft 365 (Office)"; Id = "Microsoft.Office";                Source = "winget" }
+        @{ Name = "Adobe Acrobat Reader";   Id = "Adobe.Acrobat.Reader.64-bit";     Source = "winget" }
     )
     "System & Diagnostics" = @(
-        @{ Name = "AIDA64 Extreme";         Id = "FinalWire.AIDA64.Extreme" }
-        @{ Name = "HWiNFO";                 Id = "REALiX.HWiNFO" }
-        @{ Name = "CrystalDiskMark";        Id = "CrystalDewWorld.CrystalDiskMark" }
-        @{ Name = "Driver Booster";         Id = "IObit.DriverBooster" }
+        @{ Name = "AIDA64 Extreme";         Id = "FinalWire.AIDA64.Extreme";        Source = "winget" }
+        @{ Name = "HWiNFO";                 Id = "REALiX.HWiNFO";                   Source = "winget" }
+        @{ Name = "CrystalDiskMark";        Id = "CrystalDewWorld.CrystalDiskMark"; Source = "winget" }
+        @{ Name = "Driver Booster";         Id = "IObit.DriverBooster";             Source = "winget" }
+    )
+    "Chocolatey Packages (requires Chocolatey)" = @(
+        @{ Name = "HP Support Assistant";   Id = "hpsupportassistant";              Source = "choco" }
     )
 }
 
@@ -97,6 +133,7 @@ foreach ($cat in $apps.Keys) {
             Num      = $index
             Name     = $app.Name
             Id       = $app.Id
+            Source   = $app.Source
             Category = $cat
         })
     }
@@ -106,7 +143,7 @@ foreach ($cat in $apps.Keys) {
 function Show-Menu {
     Clear-Host
     Write-Host "================================================================" -ForegroundColor Cyan
-    Write-Host "               HPC Tech App INSTALLER  (winget)"                  -ForegroundColor Cyan
+    Write-Host "               HPC Tech App INSTALLER  (winget + choco)"          -ForegroundColor Cyan
     Write-Host "================================================================" -ForegroundColor Cyan
     $lastCat = ""
     foreach ($item in $flat) {
@@ -115,16 +152,18 @@ function Show-Menu {
             Write-Host "  --- $($item.Category) ---" -ForegroundColor DarkGray
             $lastCat = $item.Category
         }
-        "{0,4})  {1}" -f $item.Num, $item.Name | Write-Host
+        $tag = if ($item.Source -eq "choco") { "  [choco]" } else { "" }
+        "{0,4})  {1}{2}" -f $item.Num, $item.Name, $tag | Write-Host
     }
     Write-Host "----------------------------------------------------------------"
     Write-Host "     A)  Install ALL of the above" -ForegroundColor Green
     Write-Host "     P)  Default App Pack"         -ForegroundColor Green
+    Write-Host "     C)  Install Chocolatey"       -ForegroundColor Yellow
     Write-Host "     Q)  Quit"                     -ForegroundColor Red
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "  Type numbers separated by spaces or commas (order = install order)."
-    Write-Host "  Example:  1 4 8 15"
+    Write-Host "  Example:  1 4 8 15      ([choco] items auto-install Chocolatey if needed)"
     Write-Host ""
 }
 
@@ -132,15 +171,31 @@ function Show-Menu {
 function Install-App($item) {
     Write-Host ""
     Write-Host "----------------------------------------------------------------"
-    Write-Host " Installing: $($item.Name)  ($($item.Id))" -ForegroundColor White
+    Write-Host " Installing: $($item.Name)  ($($item.Id)) [$($item.Source)]" -ForegroundColor White
     Write-Host "----------------------------------------------------------------"
-    winget install --id $item.Id --exact --silent `
-        --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -eq 0) {
+
+    if ($item.Source -eq "choco") {
+        if (-not (Test-Choco)) {
+            Write-Host " [i] This package needs Chocolatey. Installing it first..." -ForegroundColor Yellow
+            if (-not (Install-Choco)) {
+                Write-Host " [!!] $($item.Name) skipped (Chocolatey not available)." -ForegroundColor Red
+                return $false
+            }
+        }
+        choco install $item.Id -y --no-progress
+        $code = $LASTEXITCODE
+    }
+    else {
+        winget install --id $item.Id --exact --silent `
+            --accept-package-agreements --accept-source-agreements
+        $code = $LASTEXITCODE
+    }
+
+    if ($code -eq 0) {
         Write-Host " [OK] $($item.Name) done." -ForegroundColor Green
         return $true
     } else {
-        Write-Host " [!!] $($item.Name) failed (exit $LASTEXITCODE)." -ForegroundColor Red
+        Write-Host " [!!] $($item.Name) failed (exit $code)." -ForegroundColor Red
         return $false
     }
 }
@@ -154,6 +209,14 @@ do {
 
     $c = $choice.Trim().ToUpper()
     if ($c -eq "Q") { break }
+
+    # Standalone: install Chocolatey only
+    if ($c -eq "C") {
+        Install-Choco | Out-Null
+        Write-Host ""
+        Read-Host "Press Enter to continue"
+        continue
+    }
 
     if ($c -eq "A") {
         $selection = $flat
